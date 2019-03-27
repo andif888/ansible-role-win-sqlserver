@@ -1,0 +1,54 @@
+---
+# tasks file for ansible-role-win-sqlserver
+
+- name: Powershell | Install Required Powershell Modules
+  win_psmodule: 
+    name: '{{ item }}' 
+    state: present
+  with_items:
+    - SQLServerDsc
+    - StorageDsc
+    - ServerManager
+    - dbatools
+    - xNetworking
+
+- name: Download SQL Server ISO
+  win_get_url:
+    url: '{{ sql_server_iso_url }}'
+    dest: C:\Windows\Temp\sql_server.iso
+    force: no
+
+- name: Mount SQL Server ISO
+  win_disk_image:
+    image_path: C:\Windows\Temp\sql_server.iso
+    state: present
+  register: disk_image_out
+
+- name: Install SQL Server
+  win_dsc:
+    resource_name: SQLSetup
+    Action: Install
+    SourcePath: '{{ disk_image_out.mount_path }}'
+    InstanceName: '{{ sql_server_instance_name }}'
+    InstallSharedDir: C:\Program Files\Microsoft SQL Server
+    InstallSharedwowDir: C:\Program Files (x86)\Microsoft SQL Server
+    InstanceDir: C:\Program Files\Microsoft SQL Server
+    SQLUserDBDir: '{{ sql_server_dir_user_db }}'
+    SQLUserDBLogDir: '{{ sql_server_dir_user_log }}'
+    SQLTempDBDir: '{{ sql_server_dir_temp_db }}'
+    SQLTempDBLogDir: '{{ sql_server_dir_temp_log }}'
+    Features: '{{ sql_server_install_features }}'
+    SQLCollation: '{{ sql_server_collation }}'
+    BrowserSvcStartupType: Automatic
+    SQLSysAdminAccounts: '{{ sql_server_sysadminaccounts }}'
+    SecurityMode: SQL
+    SAPwd_username: sa
+    SAPwd_password: '{{ sql_server_sa_password }}'
+    PsDscRunAsCredential_username: '{{ ansible_user }}'
+    PsDscRunAsCredential_password: '{{ ansible_password }}'
+  no_log: false
+    
+- name: Umount SQL Server ISO
+  win_disk_image:
+    image_path: C:\Windows\Temp\sql_server.iso
+    state: absent

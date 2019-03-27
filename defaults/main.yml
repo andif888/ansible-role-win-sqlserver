@@ -1,0 +1,12 @@
+---
+# defaults file for ansible-role-win-sqlserver
+sql_server_iso_url: https://localhost/public/en_sql_server_2017_standard_x64_dvd_11294407.iso
+sql_server_instance_name: MSSQLSERVER
+sql_server_install_features: SQLEngine,Replication,FullText
+sql_server_dir_user_db: C:\SQL\Data
+sql_server_dir_user_log: C:\SQL\DataLogs
+sql_server_dir_temp_db: C:\SQL\TempDB
+sql_server_dir_temp_log: C:\SQL\TempDBLogs
+sql_server_collation: Latin1_General_CI_AS_KS_WS
+sql_server_sysadminaccounts: BUILTIN\Administrators
+sql_server_sa_password: Passw0rd=!

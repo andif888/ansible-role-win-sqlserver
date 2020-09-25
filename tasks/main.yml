@@ -26,7 +26,7 @@
 
 # mount_path[] !!!
 
-- name: Install SQL Server
+- name: Install SQL Server (ansible < 2.10)
   win_dsc:
     resource_name: SQLSetup
     Action: Install
@@ -51,7 +51,7 @@
   no_log: false
   when: ansible_version.full is version_compare('2.10', '<')
 
-- name: Install SQL Server
+- name: Install SQL Server (ansible >= 2.10)
   win_dsc:
     resource_name: SQLSetup
     Action: Install

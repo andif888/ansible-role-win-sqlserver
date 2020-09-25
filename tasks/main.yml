@@ -24,6 +24,8 @@
     state: present
   register: disk_image_out
 
+# mount_path[] !!!
+
 - name: Install SQL Server
   win_dsc:
     resource_name: SQLSetup
@@ -47,6 +49,32 @@
     PsDscRunAsCredential_username: '{{ ansible_user }}'
     PsDscRunAsCredential_password: '{{ ansible_password }}'
   no_log: false
+  when: ansible_version.full is version_compare('2.10', '<')
+
+- name: Install SQL Server
+  win_dsc:
+    resource_name: SQLSetup
+    Action: Install
+    SourcePath: '{{ disk_image_out.mount_paths[0] }}'
+    InstanceName: '{{ sql_server_instance_name }}'
+    InstallSharedDir: C:\Program Files\Microsoft SQL Server
+    InstallSharedwowDir: C:\Program Files (x86)\Microsoft SQL Server
+    InstanceDir: C:\Program Files\Microsoft SQL Server
+    SQLUserDBDir: '{{ sql_server_dir_user_db }}'
+    SQLUserDBLogDir: '{{ sql_server_dir_user_log }}'
+    SQLTempDBDir: '{{ sql_server_dir_temp_db }}'
+    SQLTempDBLogDir: '{{ sql_server_dir_temp_log }}'
+    Features: '{{ sql_server_install_features }}'
+    SQLCollation: '{{ sql_server_collation }}'
+    BrowserSvcStartupType: Automatic
+    SQLSysAdminAccounts: '{{ sql_server_sysadminaccounts }}'
+    SecurityMode: SQL
+    SAPwd_username: sa
+    SAPwd_password: '{{ sql_server_sa_password }}'
+    PsDscRunAsCredential_username: '{{ ansible_user }}'
+    PsDscRunAsCredential_password: '{{ ansible_password }}'
+  no_log: false
+  when: ansible_version.full is version_compare('2.10', '>=')
     
 - name: Umount SQL Server ISO
   win_disk_image:

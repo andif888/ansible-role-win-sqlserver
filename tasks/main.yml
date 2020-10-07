@@ -1,6 +1,23 @@
 ---
 # tasks file for ansible-role-win-sqlserver
 
+- name: Get wuauserv start_mode
+  ansible.windows.win_service:
+    name: wuauserv
+  register: wuauserv_state
+  
+- debug:
+    var: wuauserv_state.start_mode
+
+- name: Set wuauserv start_mode=manual
+  ansible.windows.win_service:
+    name: wuauserv
+    start_mode: manual
+  register: wuauserv_state_modified
+  when: wuauserv_state.start_mode == 'disabled'
+
+
+
 - name: Powershell | Install Required Powershell Modules
   win_psmodule: 
     name: '{{ item }}' 
@@ -80,3 +97,9 @@
   win_disk_image:
     image_path: C:\Windows\Temp\sql_server.iso
     state: absent
+
+- name: Restore wuauserv start_mode={{ wuauserv_state.start_mode }}
+  ansible.windows.win_service:
+    name: wuauserv
+    start_mode: '{{ wuauserv_state.start_mode }}'
+  when: wuauserv_state_modified.changed

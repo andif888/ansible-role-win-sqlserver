@@ -35,11 +35,21 @@
     dest: C:\Windows\Temp\sql_server.iso
     force: no
 
+- name: Sleep for 2 seconds and continue with play
+  wait_for:
+    timeout: 2
+  delegate_to: localhost
+
 - name: Mount SQL Server ISO
   win_disk_image:
     image_path: C:\Windows\Temp\sql_server.iso
     state: present
   register: disk_image_out
+
+- name: Sleep for 2 seconds and continue with play
+  wait_for:
+    timeout: 2
+  delegate_to: localhost
 
 # mount_path[] !!!
 

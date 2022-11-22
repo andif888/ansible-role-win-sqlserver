@@ -1,12 +1,97 @@
 ---
 # defaults file for ansible-role-win-sqlserver
-sql_server_iso_url: https://localhost/public/en_sql_server_2017_standard_x64_dvd_11294407.iso
+
+# @var ps_tools_download_url:description: >
+# Download URL for PSTools.
+#
+# PSEXEC needs to be used to execute the SQL Server Installer 
+# @end
+ps_tools_download_url: 'https://download.sysinternals.com/files/PSTools.zip'
+
+# @var ps_tools_filename_zip:description: PSTools Package file name
+ps_tools_filename_zip: 'PSTools.zip'
+
+# @var sql_server_extract_dir:description: Extract directory for installation files
+sql_server_extract_dir: 'C:\windows\temp\sqlextract'
+
+# @var sql_server_iso_url:description: SQL Server ISO Download URL
+sql_server_iso_url: 'http://localhost:9000/en_sql_server_2019_standard_x64_dvd_814b57aa.iso'
+
+# @var sql_server_iso_url_validate_certs:description: Validate SSL certs when downloading files
+sql_server_iso_url_validate_certs: yes
+
+# @var sql_server_iso_file_path:description: Resulting file path after SQL Server ISO is downloaded
+sql_server_iso_file_path: '{{ sql_server_extract_dir }}\sql_server.iso'
+
+# @var sql_server_version_major_path_prefix:description: >
+# Path prefix dependent on SQL Server version.
+#
+# MSSQL11=SQL Server 2012
+#
+# MSSQL12=SQL Server 2014
+#
+# MSSQL15=SQL Server 2019
+#
+# @end
+sql_server_version_major_path_prefix: 'MSSQL15'
+
+# @var sql_server_install_configuration_template:description: Path to template for sql_server_configuration_file
+sql_server_install_configuration_template: 'templates/sql_server_configuration_file_{{ sql_server_version_major_path_prefix }}_ini.j2'
+
+# @var sql_server_install_configuration_file_path:description: Resulting path for sql_server_configuration_file.ini
+sql_server_install_configuration_file_path: '{{ sql_server_extract_dir }}\sql_server_configuration_file.ini'
+
+# @var sql_server_instance_name:description: SQL Server Instance Name
 sql_server_instance_name: MSSQLSERVER
-sql_server_install_features: SQLEngine,Replication,FullText
-sql_server_dir_user_db: C:\SQL\Data
-sql_server_dir_user_log: C:\SQL\DataLogs
-sql_server_dir_temp_db: C:\SQL\TempDB
-sql_server_dir_temp_log: C:\SQL\TempDBLogs
-sql_server_collation: Latin1_General_CI_AS_KS_WS
+
+# @var sql_server_install_features:description: SQL Server Features to be installed
+sql_server_install_features: SQLENGINE,REPLICATION,FULLTEXT
+
+# @var sql_server_dir_install_data:description: Installation directory
+sql_server_dir_install_data: 'C:\Program Files\Microsoft SQL Server'
+
+# @var sql_server_dir_user_db:description: >
+# Directory for SQL Server User DBs
+#
+# Note: To use this variable you need to uncomment them in templates/sql_server_configuration_file_std...
+# @end
+sql_server_dir_user_db: '{{ sql_server_dir_install_data }}\{{ sql_server_version_major_path_prefix }}.{{ sql_server_instance_name }}\MSSQL\DATA'
+
+# @var sql_server_dir_user_log:description: >
+# Directory for SQL Server Database Logfiles
+#
+# Note: To use this variable you need to uncomment them in templates/sql_server_configuration_file_std...
+# @end
+sql_server_dir_user_log: '{{ sql_server_dir_install_data }}\{{ sql_server_version_major_path_prefix }}.{{ sql_server_instance_name }}\MSSQL\DATA'
+
+# @var sql_server_dir_temp_db:description: >
+# Directory for SQL Server TempDB
+#
+# Note: To use this variable you need to uncomment them in templates/sql_server_configuration_file_std...
+# @end
+sql_server_dir_temp_db: '{{ sql_server_dir_install_data }}\{{ sql_server_version_major_path_prefix }}.{{ sql_server_instance_name }}\MSSQL\DATA'
+
+# @var sql_server_dir_backup:description: >
+# Directory for SQL Server Backups
+#
+# Note: To use this variable you need to uncomment them in templates/sql_server_configuration_file_std...
+# @end
+sql_server_dir_backup: '{{ sql_server_dir_install_data }}\{{ sql_server_version_major_path_prefix }}.{{ sql_server_instance_name }}\MSSQL\Backup'
+
+# @var sql_server_collation:description: SQL Server Collation
+sql_server_collation: SQL_Latin1_General_CP1_CI_AS
+
+# @var sql_server_sysadminaccounts:description: SQL Server Sysadmin account
 sql_server_sysadminaccounts: BUILTIN\Administrators
-sql_server_sa_password: Passw0rd=!
+
+# @var sql_server_already_installed_path:description: Path to check if SQL Server is already installed
+sql_server_already_installed_path: '{{ sql_server_dir_install_data }}\{{ sql_server_version_major_path_prefix }}.{{ sql_server_instance_name }}\MSSQL\DATA'
+
+# @var sql_server_sa_password:description: SQL Server sa password
+sql_server_sa_password: 'SomePassw0rd!'
+
+# @var sql_server_windows_firewall_rule_name:description: SQL Server Firewall Rule name
+sql_server_windows_firewall_rule_name: '{{ sql_server_instance_name }}'
+
+# @var sql_server_windows_firewall_port:description: SQL Server Firewall port
+sql_server_windows_firewall_port: 1433

@@ -1,115 +1,80 @@
 ---
 # tasks file for ansible-role-win-sqlserver
+- name: Ensure extract dir exists
+  ansible.windows.win_file:
+    path: '{{ sql_server_extract_dir }}'
+    state: directory
 
-- name: Get wuauserv start_mode
-  ansible.windows.win_service:
-    name: wuauserv
-  register: wuauserv_state
-  
-- debug:
-    var: wuauserv_state.start_mode
-
-- name: Set wuauserv start_mode=manual
-  ansible.windows.win_service:
-    name: wuauserv
-    start_mode: manual
-  register: wuauserv_state_modified
-  when: wuauserv_state.start_mode == 'disabled'
-
-
-
-- name: Powershell | Install Required Powershell Modules
-  win_psmodule: 
-    name: '{{ item }}' 
-    state: present
-  with_items:
-    - SQLServerDsc
-    - StorageDsc
-    - ServerManager
-    - dbatools
-    - xNetworking
-
-- name: Download SQL Server ISO
-  win_get_url:
-    url: '{{ sql_server_iso_url }}'
-    dest: C:\Windows\Temp\sql_server.iso
+- name: Download PSTools
+  ansible.windows.win_get_url:
+    url: '{{ ps_tools_download_url }}'
+    dest: '{{ sql_server_extract_dir }}\{{ ps_tools_filename_zip }}'
+    validate_certs: '{{ sql_server_iso_url_validate_certs }}'
     force: no
 
-- name: Sleep for 2 seconds and continue with play
-  wait_for:
-    timeout: 2
-  delegate_to: localhost
+- name: PSTools - Unzip
+  community.windows.win_unzip:
+    src: '{{ sql_server_extract_dir }}\{{ ps_tools_filename_zip }}'
+    dest: '{{ sql_server_extract_dir }}\'
+    delete_archive: yes
+
+- name: Download SQL Server ISO
+  ansible.windows.win_get_url:
+    url: '{{ sql_server_iso_url }}'
+    dest: '{{ sql_server_iso_file_path }}'
+    validate_certs: '{{ sql_server_iso_url_validate_certs }}'
+    force: no
+
+- name: Sleep for 5 seconds and continue with play
+  ansible.windows.win_wait_for:
+    timeout: 5
 
 - name: Mount SQL Server ISO
-  win_disk_image:
-    image_path: C:\Windows\Temp\sql_server.iso
+  community.windows.win_disk_image:
+    image_path: '{{ sql_server_iso_file_path }}'
     state: present
   register: disk_image_out
 
-- name: Sleep for 2 seconds and continue with play
-  wait_for:
-    timeout: 2
-  delegate_to: localhost
+- name: Sleep for 5 seconds and continue with play
+  ansible.windows.win_wait_for:
+    timeout: 5
 
-# mount_path[] !!!
 
-- name: Install SQL Server (ansible < 2.10)
-  win_dsc:
-    resource_name: SQLSetup
-    Action: Install
-    SourcePath: '{{ disk_image_out.mount_path }}'
-    InstanceName: '{{ sql_server_instance_name }}'
-    InstallSharedDir: C:\Program Files\Microsoft SQL Server
-    InstallSharedwowDir: C:\Program Files (x86)\Microsoft SQL Server
-    InstanceDir: C:\Program Files\Microsoft SQL Server
-    SQLUserDBDir: '{{ sql_server_dir_user_db }}'
-    SQLUserDBLogDir: '{{ sql_server_dir_user_log }}'
-    SQLTempDBDir: '{{ sql_server_dir_temp_db }}'
-    SQLTempDBLogDir: '{{ sql_server_dir_temp_log }}'
-    Features: '{{ sql_server_install_features }}'
-    SQLCollation: '{{ sql_server_collation }}'
-    BrowserSvcStartupType: Automatic
-    SQLSysAdminAccounts: '{{ sql_server_sysadminaccounts }}'
-    SecurityMode: SQL
-    SAPwd_username: sa
-    SAPwd_password: '{{ sql_server_sa_password }}'
-    PsDscRunAsCredential_username: '{{ ansible_user }}'
-    PsDscRunAsCredential_password: '{{ ansible_password }}'
-  no_log: false
-  when: ansible_version.full is version_compare('2.10', '<')
+- name: Copy ConfigurationFile.ini
+  ansible.windows.win_template:
+    src: '{{ sql_server_install_configuration_template }}'
+    dest: '{{ sql_server_install_configuration_file_path }}'
 
-- name: Install SQL Server (ansible >= 2.10)
-  win_dsc:
-    resource_name: SQLSetup
-    Action: Install
-    SourcePath: '{{ disk_image_out.mount_paths[0] }}'
-    InstanceName: '{{ sql_server_instance_name }}'
-    InstallSharedDir: C:\Program Files\Microsoft SQL Server
-    InstallSharedwowDir: C:\Program Files (x86)\Microsoft SQL Server
-    InstanceDir: C:\Program Files\Microsoft SQL Server
-    SQLUserDBDir: '{{ sql_server_dir_user_db }}'
-    SQLUserDBLogDir: '{{ sql_server_dir_user_log }}'
-    SQLTempDBDir: '{{ sql_server_dir_temp_db }}'
-    SQLTempDBLogDir: '{{ sql_server_dir_temp_log }}'
-    Features: '{{ sql_server_install_features }}'
-    SQLCollation: '{{ sql_server_collation }}'
-    BrowserSvcStartupType: Automatic
-    SQLSysAdminAccounts: '{{ sql_server_sysadminaccounts }}'
-    SecurityMode: SQL
-    SAPwd_username: sa
-    SAPwd_password: '{{ sql_server_sa_password }}'
-    PsDscRunAsCredential_username: '{{ ansible_user }}'
-    PsDscRunAsCredential_password: '{{ ansible_password }}'
-  no_log: false
-  when: ansible_version.full is version_compare('2.10', '>=')
-    
+
+- name: Execute SQL Setup with psexec
+  ansible.windows.win_command: 'psexec.exe -accepteula -nobanner -i 1 -s {{ disk_image_out.mount_paths[0] }}\setup.exe /CONFIGURATIONFILE="{{ sql_server_install_configuration_file_path }}" /IACCEPTSQLSERVERLICENSETERMS /QUIET'
+  args:
+    chdir: '{{ sql_server_extract_dir }}'
+    creates: '{{ sql_server_already_installed_path }}'
+  register: sql_setup_result
+
+- name: Debug sql_setup_result
+  ansible.builtin.debug:
+    var: sql_setup_result
+
 - name: Umount SQL Server ISO
-  win_disk_image:
-    image_path: C:\Windows\Temp\sql_server.iso
+  community.windows.win_disk_image:
+    image_path: '{{ sql_server_iso_file_path }}'
     state: absent
 
-- name: Restore wuauserv start_mode={{ wuauserv_state.start_mode }}
-  ansible.windows.win_service:
-    name: wuauserv
-    start_mode: '{{ wuauserv_state.start_mode }}'
-  when: wuauserv_state_modified.changed
+
+- name: Allow firewall port 1433
+  community.windows.win_firewall_rule:
+    name: '{{ sql_server_windows_firewall_rule_name }}'
+    localport: '{{ sql_server_windows_firewall_port }}'
+    action: allow
+    direction: in
+    protocol: tcp
+    state: present
+    enabled: yes
+  tags: firewall
+
+- name: Ensure extract dir exists
+  ansible.windows.win_file:
+    path: '{{ sql_server_extract_dir }}'
+    state: absent

@@ -1,5 +1,10 @@
 ---
 - hosts: localhost
   remote_user: root
+  vars:
+    sql_server_iso_url: 'https://fileserver.acme.org/iso/en_sql_server_2014_standard_edition_with_service_pack_3_x64_dvd_0a7a58cb.iso'
+    sql_server_iso_url_validate_certs: no
+    sql_server_version_major_path_prefix: 'MSSQL12'
+    
   roles:
     - ansible-role-win-sqlserver

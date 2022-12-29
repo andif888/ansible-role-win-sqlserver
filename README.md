@@ -7,6 +7,7 @@ Ansible Role to install SQL Server on Windows
 - [Default Variables](#default-variables)
   - [ps_tools_download_url](#ps_tools_download_url)
   - [ps_tools_filename_zip](#ps_tools_filename_zip)
+  - [ql_server_tempdb_file_count](#ql_server_tempdb_file_count)
   - [sql_server_already_installed_path](#sql_server_already_installed_path)
   - [sql_server_collation](#sql_server_collation)
   - [sql_server_dir_backup](#sql_server_dir_backup)
@@ -24,6 +25,7 @@ Ansible Role to install SQL Server on Windows
   - [sql_server_iso_url_validate_certs](#sql_server_iso_url_validate_certs)
   - [sql_server_sa_password](#sql_server_sa_password)
   - [sql_server_sysadminaccounts](#sql_server_sysadminaccounts)
+  - [sql_server_tempdb_file_count](#sql_server_tempdb_file_count)
   - [sql_server_version_major_path_prefix](#sql_server_version_major_path_prefix)
   - [sql_server_windows_firewall_port](#sql_server_windows_firewall_port)
   - [sql_server_windows_firewall_rule_name](#sql_server_windows_firewall_rule_name)
@@ -57,6 +59,10 @@ PSTools Package file name
 ```YAML
 ps_tools_filename_zip: PSTools.zip
 ```
+
+### ql_server_tempdb_file_count
+
+Specifies the number of tempdb data files to be added by setup. This value can be increased up to the number of cores.
 
 ### sql_server_already_installed_path
 
@@ -240,6 +246,14 @@ SQL Server Sysadmin account
 
 ```YAML
 sql_server_sysadminaccounts: BUILTIN\Administrators
+```
+
+### sql_server_tempdb_file_count
+
+#### Default value
+
+```YAML
+sql_server_tempdb_file_count: 1
 ```
 
 ### sql_server_version_major_path_prefix

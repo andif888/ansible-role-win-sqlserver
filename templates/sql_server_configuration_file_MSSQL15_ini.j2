@@ -174,3 +174,7 @@ INSTALLSQLDATADIR="{{ sql_server_dir_install_data }}"
 
 
 SAPWD="{{ sql_server_sa_password }}"
+
+; Specifies the number of tempdb data files to be added by setup. This value can be increased up to the number of cores
+
+SQLTEMPDBFILECOUNT="{{ sql_server_tempdb_file_count }}"

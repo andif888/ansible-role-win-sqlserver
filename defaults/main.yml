@@ -90,6 +90,9 @@ sql_server_already_installed_path: '{{ sql_server_dir_install_data }}\{{ sql_ser
 # @var sql_server_sa_password:description: SQL Server sa password
 sql_server_sa_password: 'SomePassw0rd!'
 
+# @var ql_server_tempdb_file_count:description: Specifies the number of tempdb data files to be added by setup. This value can be increased up to the number of cores.
+sql_server_tempdb_file_count: 1
+
 # @var sql_server_windows_firewall_rule_name:description: SQL Server Firewall Rule name
 sql_server_windows_firewall_rule_name: '{{ sql_server_instance_name }}'
 

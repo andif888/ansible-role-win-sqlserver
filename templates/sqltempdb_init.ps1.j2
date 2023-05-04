@@ -1,0 +1,11 @@
+$SQLService="MSSQLSERVER" 
+$SQLAgentService="SQLSERVERAGENT"
+  
+$tempfolder="{{ sql_server_dir_temp_db }}"
+ 
+if (!(test-path -path $tempfolder)) {
+  New-Item -ItemType directory -Path $tempfolder
+}
+ 
+Start-Service $SQLService 
+Start-Service $SQLAgentService

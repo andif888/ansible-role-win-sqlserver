@@ -23,7 +23,7 @@ QUIETSIMPLE="False"
 
 ; Specify whether SQL Server Setup should discover and include product updates. The valid values are True and False or 1 and 0. By default SQL Server Setup will include updates that are found.
 
-UpdateEnabled="False"
+UpdateEnabled="{{ sql_server_update_enabled | bool | ternary('True', 'False') }}"
 
 ; Specifies features to install, uninstall, or upgrade. The list of top-level features include SQL, AS, RS, IS, MDS, and Tools. The SQL feature will install the Database Engine, Replication, Full-Text, and Data Quality Services (DQS) server. The Tools feature will install Management Tools, Books online components, SQL Server Data Tools, and other shared components.
 

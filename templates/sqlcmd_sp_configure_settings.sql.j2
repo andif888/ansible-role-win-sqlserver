@@ -1,0 +1,27 @@
+sp_configure 'show advanced options', 1;
+GO
+RECONFIGURE;
+GO
+{% if sql_server_min_memory is defined %}
+sp_configure 'min server memory', {{ sql_server_min_memory }};
+GO
+{% endif %}
+{% if sql_server_max_memory is defined %}
+sp_configure 'max server memory', {{ sql_server_max_memory }};
+GO
+{% endif %}
+
+{% if sql_server_max_degree_of_parallelism is defined %}
+sp_configure 'max degree of parallelism', {{ sql_server_max_degree_of_parallelism }};
+GO
+{% endif %}
+
+sp_configure 'clr enabled', {{ sql_server_enable_clr | ternary('1', '0') }};
+GO
+sp_configure 'SMO and DMO XPs', {{ sql_server_enable_smo_dmo_xps | ternary('1', '0') }};
+GO
+sp_configure 'xp_cmdshell', {{ sql_server_enable_xp_cmdshell | ternary('1', '0') }};
+GO
+
+RECONFIGURE;
+GO

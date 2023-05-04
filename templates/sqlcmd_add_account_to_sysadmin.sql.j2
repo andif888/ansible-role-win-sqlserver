@@ -1,0 +1,40 @@
+{% for adaccount in sql_server_sysadmin_windows_accounts %}
+IF NOT EXISTS 
+    (SELECT name  
+     FROM master.sys.server_principals
+     WHERE name = '{{ adaccount }}')
+BEGIN
+    CREATE LOGIN [{{ adaccount }}] FROM WINDOWS WITH DEFAULT_DATABASE=[master];
+END
+GO
+
+IF NOT EXISTS
+  (SELECT name  
+     FROM master.sys.server_principals
+     WHERE IS_SRVROLEMEMBER('sysadmin', name) = 1 
+     AND name = '{{ adaccount }}')
+BEGIN
+    ALTER SERVER ROLE [sysadmin] ADD MEMBER [{{ adaccount }}]
+END
+GO
+{% endfor %}
+{% for sqlaccount in sql_server_sysadmin_sql_accounts %}
+IF NOT EXISTS 
+    (SELECT name  
+     FROM master.sys.server_principals
+     WHERE name = '{{ sqlaccount.name }}')
+BEGIN
+    CREATE LOGIN [{{ sqlaccount.name }}] WITH PASSWORD = '{{ sqlaccount.password }}', DEFAULT_DATABASE=[master], CHECK_POLICY=OFF;
+END
+GO
+
+IF NOT EXISTS
+  (SELECT name  
+     FROM master.sys.server_principals
+     WHERE IS_SRVROLEMEMBER('sysadmin', name) = 1 
+     AND name = '{{ sqlaccount.name }}')
+BEGIN
+    ALTER SERVER ROLE [sysadmin] ADD MEMBER [{{ sqlaccount.name }}]
+END
+GO
+{% endfor %}

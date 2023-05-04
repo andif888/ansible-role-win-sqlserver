@@ -90,7 +90,7 @@ sql_server_already_installed_path: '{{ sql_server_dir_install_data }}\{{ sql_ser
 # @var sql_server_sa_password:description: SQL Server sa password
 sql_server_sa_password: 'SomePassw0rd!'
 
-# @var ql_server_tempdb_file_count:description: Specifies the number of tempdb data files to be added by setup. This value can be increased up to the number of cores.
+# @var sql_server_tempdb_file_count:description: Specifies the number of tempdb data files to be added by setup. This value can be increased up to the number of cores.
 sql_server_tempdb_file_count: 1
 
 # @var sql_server_windows_firewall_rule_name:description: SQL Server Firewall Rule name
@@ -98,3 +98,80 @@ sql_server_windows_firewall_rule_name: '{{ sql_server_instance_name }}'
 
 # @var sql_server_windows_firewall_port:description: SQL Server Firewall port
 sql_server_windows_firewall_port: 1433
+
+# @var sql_server_update_enabled:description: Enable Updates
+sql_server_update_enabled: false
+
+# @var sql_server_use_microsoft_update:description: Use Microsoft Updates
+sql_server_use_microsoft_update: false
+
+
+#
+# sp_configure_settings
+#
+
+# @var sql_server_sp_configure_settings_enabled:description: Enable feature to set advanced configuration settings
+sql_server_sp_configure_settings_enabled: false
+
+# @var sql_server_sp_configure_settings_file_sql_template:description: Template file to use for setting advanced configuration settings
+sql_server_sp_configure_settings_file_sql_template: '{{ role_path }}/templates/sqlcmd_sp_configure_settings.sql.j2'
+
+# @var sql_server_sp_configure_settings_file_sql_script_file_path:description: >
+# Local path to save template file for setting advanced configuration settings. 
+# @end 
+sql_server_sp_configure_settings_file_sql_script_file_path: '{{ ansible_env.SystemRoot }}\sqlcmd_sp_configure_settings.sql'
+
+# @var sql_server_min_memory:description: Advanced setting - minimum memory
+sql_server_min_memory: "{{ (ansible_memtotal_mb|int) - (((ansible_memtotal_mb|int) * 0.1)|int) }}"
+
+# @var sql_server_max_memory:description: Advanced setting - maximum memory
+sql_server_max_memory: "{{ (ansible_memtotal_mb|int) - (((ansible_memtotal_mb|int) * 0.1)|int) }}"
+
+# @var sql_server_max_degree_of_parallelism:description: Advanced setting - max degree of parallelism
+sql_server_max_degree_of_parallelism: "{{ '8' if (ansible_processor_vcpus >= 8) else '2' if (ansible_processor_vcpus <= 2) else '4' }}"
+
+# @var sql_server_enable_smo_dmo_xps:description: Advanced setting - SMO and DMO XPs
+sql_server_enable_smo_dmo_xps: true
+
+# @var sql_server_enable_clr:description: Advanced setting - clr enabled
+sql_server_enable_clr: false
+
+# @var sql_server_enable_xp_cmdshell:description: Advanced setting - xp_cmdshell
+sql_server_enable_xp_cmdshell: false
+
+#
+# temp db on ephemeral disk
+#
+
+# @var sql_server_dir_temp_db_on_emphemeral_disk:description: Set this to true if using azure temporary disk for TempDB
+sql_server_dir_temp_db_on_emphemeral_disk: false
+
+#
+# sysadmins
+#
+
+# @var sql_server_change_sysadmin_role_file_sql_template:description: Template file to add accounts to sysadmin group
+sql_server_change_sysadmin_role_file_sql_template: '{{ role_path }}/templates/sqlcmd_add_account_to_sysadmin.sql.j2'
+
+# @var sql_server_change_sysadmin_role_file_sql_script_file_path:description: >
+# Local path to save template file to add accounts to sysadmin group. 
+# Get automatically removed afterwards
+# @end 
+sql_server_change_sysadmin_role_file_sql_script_file_path: '{{ ansible_env.SystemRoot }}\sqlcmd_add_adaccount_to_sysadmin.sql'
+
+# @var sql_server_sysadmin_windows_accounts:description: List of windows accounts to add to sysadmin role
+# @var sql_server_sysadmin_windows_accounts:example: >
+# sql_server_sysadmin_windows_accounts:
+#   - DOMAIN\user1
+#   - DOMAIN\group1
+# @end
+sql_server_sysadmin_windows_accounts: []
+
+# @var sql_server_sysadmin_sql_accounts:description: List of sql accounts to add to sysadmin role
+# @var sql_server_sysadmin_sql_accounts:example: >
+# sql_server_sysadmin_sql_accounts:
+#   - { name: "someadmin", password: "somepassword" }
+#   - { name: "otheradmin", password: "otherpassword" }
+# @end
+sql_server_sysadmin_sql_accounts: []
+...

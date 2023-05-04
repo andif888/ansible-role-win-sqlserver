@@ -78,3 +78,87 @@
   ansible.windows.win_file:
     path: '{{ sql_server_extract_dir }}'
     state: absent
+
+# sp_configure settings
+
+- name: SP_configure settings
+  block:
+    - name: Copy sql script for sp_configure_settings
+      ansible.windows.win_template:
+        src: '{{ sql_server_sp_configure_settings_file_sql_template }}'
+        dest: '{{ sql_server_sp_configure_settings_file_sql_script_file_path }}'
+      tags: sql-server-sp-configure-settings
+
+    - name: Execute sql script for sp_configure_settings
+      ansible.windows.win_shell: |
+        sqlcmd -b -i "{{ sql_server_sp_configure_settings_file_sql_script_file_path }}"
+      register: result_execute_sql_sp_configure_settings
+      tags: sql-server-sp-configure-settings
+
+    - name: Debug result_execute_sql_sp_configure_settings
+      ansible.builtin.debug:
+        var: result_execute_sql_sp_configure_settings
+      tags: sql-server-sp-configure-settings
+  when: sql_server_sp_configure_settings_enabled
+
+# temp db on ephemeral disk
+
+- name: Ephemeral Disk for TempDB
+  block:
+    - name: Ephemeral Disk for TempDB - SQL startup script
+      ansible.windows.win_template:
+        src: '{{ role_path }}/templates/sqltempdb_init.ps1.j2'
+        dest: '{{ ansible_env.SystemRoot }}\sqltempdb_init.ps1'
+
+    - name: Ephemeral Disk for TempDB - Create Starup Task
+      community.windows.win_scheduled_task:
+        name: SQL Startup
+        description: Create directory for Temp DB on startup
+        triggers:
+          - type: boot
+        actions:
+          - path: powershell.exe
+            arguments: '-ExecutionPolicy Unrestricted -NonInteractive -File {{ ansible_env.SystemRoot }}\sqltempdb_init.ps1'
+        username: SYSTEM
+        state: present
+        run_level: highest
+        enabled: yes
+
+    - name: Ephemeral Disk for TempDB - Set service startup mode to delayed
+      ansible.windows.win_service:
+        name: '{{ item }}'
+        start_mode: delayed
+      with_items:
+        - MSSQLSERVER
+        - SQLSERVERAGENT
+  when:
+    - sql_server_dir_temp_db is defined
+    - sql_server_dir_temp_db_on_emphemeral_disk
+
+# sysadmin role
+- name: Sysadmin Roles
+  block:
+    - name: Copy sql script for sysadmin role members
+      ansible.windows.win_template:
+        src: '{{ sql_server_change_sysadmin_role_file_sql_template }}'
+        dest: '{{ sql_server_change_sysadmin_role_file_sql_script_file_path }}'
+      tags: sql-server-sysadmin-role
+
+    - name: Execute sql script for sysadmin role members
+      ansible.windows.win_shell: |
+        sqlcmd -b -i "{{ sql_server_change_sysadmin_role_file_sql_script_file_path }}"
+      register: result_execute_sql_sysadmin_role_script
+      tags: sql-server-sysadmin-role
+
+    - name: Debug result_execute_sql_sysadmin_role_script
+      ansible.builtin.debug:
+        var: result_execute_sql_sysadmin_role_script
+      tags: sql-server-sysadmin-role
+
+    - name: Ensure to remove script for sysadmin role members
+      ansible.windows.win_file:
+        path: "{{ sql_server_change_sysadmin_role_file_sql_script_file_path }}"
+        state: absent
+      tags: sql-server-sysadmin-role
+  when: (sql_server_sysadmin_windows_accounts | length > 0) or (sql_server_sysadmin_sql_accounts | length > 0)
+...
